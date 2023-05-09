@@ -1,0 +1,84 @@
+version: '3.7'
+
+services:
+  main-app:
+    build:
+      context: ./
+      dockerfile: dev.Dockerfile
+    command: ['npm', 'run', 'dev']
+    ports:
+      - '3001:3000'
+    restart: on-failure
+    environment:
+      VIRTUAL_HOST: blockchain-marketplace.docker
+      NODE_ENV: development
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./next.config.js:/app/next.config.js
+      - ./tsconfig.json:/app/tsconfig.json
+    depends_on:
+      mongodb:
+        condition: service_started
+    networks:
+      - crypto-market
+
+  ganache:
+    image: 'trufflesuite/ganache-cli:v6.12.2'
+    container_name: ganache
+    command: ganache-cli
+      --mnemonic 'found stove mimic critic suggest quarter seven permit noble pool garage crucial bacon fluid leaf'
+      --networkId 333
+      --debug
+      --defaultBalanceEther 999999
+      --db /ts-ganache-data
+    volumes:
+      - ./ts-ganache-data:/ts-ganache-data
+    ports:
+      - '7545:8545'
+    networks:
+      - crypto-market
+
+  mongodb:
+    container_name: mongodb
+    image: mongo:latest
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: marketdb
+    ports:
+      - 27017:27017
+    volumes:
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - crypto-market
+
+  mongodb-clinet:
+    container_name: mongo-express
+    image: mongo-express:latest
+    restart: always
+    profiles:
+      - tools
+    environment:
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: false
+      ME_CONFIG_MONGODB_AUTH_DATABASE: marketdb
+      ME_CONFIG_MONGODB_AUTH_USERNAME: user
+      ME_CONFIG_MONGODB_AUTH_PASSWORD: password
+    depends_on:
+      mongodb:
+        condition: service_started
+    ports:
+      - 8082:8081
+    networks:
+      - crypto-market
+
+volumes:
+  mongodb-data:
+    driver: local
+
+networks:
+  crypto-market:
+  
