@@ -32,6 +32,9 @@ services:
       --debug
       --defaultBalanceEther 999999
       --db /ts-ganache-data
+      --accounts 20
+      --deterministic
+      # --account="0xc849c2a1e43924cf936ec58a8ac3488137b5ece4b4ca98c6092cff5e85950729, 1000000000000000000000"
     volumes:
       - ./ts-ganache-data:/ts-ganache-data
     ports:
